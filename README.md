@@ -1,42 +1,14 @@
-Ramon’s arm and head thingy
+#Robot Garbage Collector
+##A robot that uses computer vision to collect marbles
 
-•	Helmet will be motorized with servos and LEDs
-o	Either take speech, or a button
-	Commands a Boolean to be true or false
-•	True: Helmet opens, LEDs turn off
-•	False: Helmet closes, LEDs turn on
+Video of project found here: 
+* (autonomous mode)[https://www.youtube.com/watch?v=0-Qhag0Sz4Y]
+* (manual mode)[https://www.youtube.com/watch?v=ChK4AZdKRys]
 
-•	Chest LED lights
-o	Perhaps use transistor circuit for 12V lights
-o	Need 5V-12V stepper
+This project is divided into two parts:
+* PC
+* Pi
 
-•	Arm will have a shocker (boost converter) which takes 5V but relies on a relay
-o	Either take speech, or a button
-	Will run for 2 seconds
+Most of the programming was done on the Pi. The main file is robot.cpp/robot.h. In order to simplify the project, I created different classes for the components of the robot, such as the camera, motors, servos. There is a networking component to this project as well.
 
-•	For speech detect:
-o	Parse strings
-o	“Helmet” will command helmet to open, close
-o	“Shock” will command boost converter to turn on
-o	“Wake” will command awareness
-	Then looks for either “Helmet” or “Shock” for 5 seconds, then closes
-	Might use button
-
-Design requirements:
-•	Waterproof or water resistant 
-•	Removable components
-o	Helmet circuit
-o	Arm 
-o	Brain (pi)
-•	Pi can connect to phone
-
-
-Distribution of files:
-•	Github
-
-Deadline: Oct 29
-
-Questions:
-•	Does Pi Zero W have a V_in?
-•	Can we connect to Pi Zero reliably with mobile?
-•	
+The script for the PC is simply to stream the robot's camera feed, while being able to either set it to autonomous mode or manual mode and control it from there.

@@ -1,0 +1,226 @@
+////////////////////////////////////////////////////////////////
+// ELEX 4618 Template project for BCIT
+// Created Oct 5, 2016 by Craig Hennessey
+// Last updated December 30, 2020
+// Modified by Jimmy Bates
+// May 18 2021
+////////////////////////////////////////////////////////////////
+#include "stdafx.h"
+
+#include <string>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <thread>
+
+#include "Client.h"
+#include "Server.h"
+// Must include Windows.h after Winsock2.h, so Serial must include after Client/Server
+#include "Serial.h" 
+
+#include "piServer.h"
+
+#include "impvars.h"
+
+void process_msg()
+{
+  MSG msg;
+  while (::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+  {
+    ::TranslateMessage(&msg);
+    ::DispatchMessage(&msg);
+  }
+}
+
+////////////////////////////////////////////////////////////////
+// Serial Communication
+////////////////////////////////////////////////////////////////
+void test_com()
+{
+  // Comport class (change port to your MSP device port)
+  Serial com;
+  com.open("COM3");
+
+  // TX and RX strings
+  std::string tx_str = "G 1 15\n";
+  std::string rx_str;
+
+  // temporary storage
+  char buff[2];
+  do
+  {
+    // Send TX string
+		com.write(tx_str.c_str(), tx_str.length());
+    Sleep(10); // wait for ADC conversion, etc. May not be needed?
+  
+    rx_str = "";
+    // start timeout count
+    double start_time = cv::getTickCount();
+
+    buff[0] = 0;
+		// Read 1 byte and if an End Of Line then exit loop
+    // Timeout after 1 second, if debugging step by step this will cause you to exit the loop
+    while (buff[0] != '\n' && (cv::getTickCount() - start_time) / cv::getTickFrequency() < 1.0)
+    {
+      if (com.read(buff, 1) > 0)
+      {
+        rx_str = rx_str + buff[0];
+      }
+    }
+
+    printf ("\nRX: %s", rx_str.c_str());
+    cv::waitKey(1);
+  } 
+  while (1);
+}
+
+////////////////////////////////////////////////////////////////
+// Display Image on screen
+////////////////////////////////////////////////////////////////
+void do_image()
+{
+  cv::Mat im;
+
+  im = cv::imread("BCIT.jpg");
+
+  srand(time(0));
+
+  for (int i = 0; i < 500; i++)
+  {
+    float radius = 50 * rand() / RAND_MAX;
+    cv::Point center = cv::Point(im.size().width*rand() / RAND_MAX, im.size().height*rand() / RAND_MAX);
+    
+    cv::circle(im, center, radius, cv::Scalar(200, 200, 200), 1, cv::LINE_AA);
+    
+    im.at<char>(i,i) = 255;
+    
+    cv::imshow("Image", im);
+    cv::waitKey(1);
+  }
+}
+
+////////////////////////////////////////////////////////////////
+// Display Video on screen
+////////////////////////////////////////////////////////////////
+void do_video()
+{
+  cv::VideoCapture vid;
+
+  vid.open(0);
+
+  if (vid.isOpened() == TRUE)
+  {
+    do
+    {
+      cv::Mat frame, edges;
+      vid >> frame;
+      if (frame.empty() == false)
+      {
+        cv::cvtColor(frame, edges, cv::COLOR_BGR2GRAY);
+        cv::GaussianBlur(edges, edges, cv::Size(7, 7), 1.5, 1.5);
+        cv::Canny(edges, edges, 0, 30, 3);
+        cv::imshow("edges", edges);
+      }
+    }
+    while (cv::waitKey(10) != ' ');
+  }      
+}		
+    
+
+////////////////////////////////////////////////////////////////
+// Demo client server communication
+////////////////////////////////////////////////////////////////
+bool serverthreadexit = false;
+Server serv;
+
+// Send image to TCP server
+void serverimagethread()
+{
+  cv::VideoCapture vid;
+
+  vid.open(0);
+
+  if (vid.isOpened() == true)
+  {
+    do
+    {
+      cv::Mat frame;
+      vid >> frame;
+      if (frame.empty() == false)
+      {
+        imshow("Server Image", frame);
+        process_msg();
+        serv.set_txim(frame);
+      }
+    }
+    while (serverthreadexit == false);
+  }
+}
+
+void serverthread()
+{
+  // Start server
+  serv.start(4618);
+}
+
+void server()
+{
+  char inputchar;
+  std::vector<std::string> cmds;
+
+  // Start image send to server thread
+  std::thread t1(&serverimagethread);
+  t1.detach();
+
+  // Start server thread
+  std::thread t2(&serverthread);
+  t2.detach();
+
+  cv::namedWindow("WindowForWaitkey");
+  do
+  {
+    inputchar = cv::waitKey(100);
+    if (inputchar == 'q') 
+    { 
+      serverthreadexit = true; 
+    }
+
+    serv.get_cmd(cmds);
+
+    if (cmds.size() > 0)
+    {
+      for (int i = 0; i < cmds.size(); i++)
+      {
+        if (cmds.at(i) == "a")
+        {
+          std::cout << "\nReceived 'a' command";
+
+          // Send an 'a' message
+          std::string reply = "Hi there from Server";
+          serv.send_string(reply);
+        }
+        else
+        {
+          std::string reply = "Got some other message";
+          serv.send_string(reply);
+        }
+      }
+    }
+  } while (serverthreadexit == false);
+
+  serv.stop();
+  
+  Sleep(100);
+}
+
+
+void pi_program()
+{
+   piServer piServ;
+   piServ.run();
+}
+
+int main(int argc, char* argv[])
+{
+    pi_program();
+}

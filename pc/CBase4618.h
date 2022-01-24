@@ -1,0 +1,54 @@
+#pragma once
+
+#include "stdafx.h"
+
+/**
+*    @brief CBase class that is used for later labs
+*    @details 
+*    @author Jimmy Bates
+*    @version 0.1
+*    @date February 9th 2021
+*/
+class CBase4618
+{
+protected: 
+   char keyPress;
+   cv::Mat _canvas; ///< _canvas object used in CBase4618
+
+public:
+   /////////////////////////////////////////////////////////
+   /// @brief CBase4618 constructor
+   /// @param None
+   /// @return nothing to return
+   /////////////////////////////////////////////////////////
+   CBase4618();
+
+   /////////////////////////////////////////////////////////
+   /// @brief CBase4618 destructor
+   /// @param None
+   /// @return nothing to return
+   /////////////////////////////////////////////////////////
+   ~CBase4618();
+
+   /////////////////////////////////////////////////////////
+   /// @brief Virtual class for overwriting
+   /// @param None
+   /// @return nothing to return
+   /////////////////////////////////////////////////////////
+   virtual void update(); 
+
+   /////////////////////////////////////////////////////////
+   /// @brief Virtual class for overwriting
+   /// @param none
+   /// @return nothing to return
+   /////////////////////////////////////////////////////////
+   virtual void draw();
+
+   /////////////////////////////////////////////////////////
+   /// @brief runs both draw, and then void
+   /// @param None
+   /// @return nothing to return
+   /////////////////////////////////////////////////////////
+   void run();
+
+ };
