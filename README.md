@@ -1,5 +1,5 @@
-#Robot Garbage Collector
-##A robot that uses computer vision to collect marbles
+# Robot Garbage Collector
+## A robot that uses computer vision to collect marbles
 
 Video of project found here: 
 * (autonomous mode)[https://www.youtube.com/watch?v=0-Qhag0Sz4Y]
